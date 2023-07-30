@@ -11,7 +11,7 @@
 class NeopixelInterface{
 private:
     enum InterfaceState{
-        UNCONNECTED, OPEN, CLOSED, ERROR
+        UNCONNECTED, OPEN, CLOSED, DIFF, ERROR
     };
 
     NeoPixelBus<NeoGrbFeature,NeoEsp8266Uart0800KbpsMethod> strip;

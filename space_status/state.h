@@ -9,14 +9,15 @@ enum ConnectionState{
 
 enum SpaceState{
     SOPEN,
-    SCLOSED
+    SCLOSED,
+    SUNKNOWN
 };
 
 class State{
 private: 
     ConnectionState connectionState = PRE_SERIAL;
-    SpaceState localState = SCLOSED;
-    SpaceState remoteState = SCLOSED;
+    SpaceState localState = SUNKNOWN;
+    SpaceState remoteState = SUNKNOWN;
 
 public:
     ConnectionState getConnectionState();

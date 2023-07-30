@@ -4,3 +4,4 @@
 #define mqtt_server "your mqtt server"
 #define mqtt_user "your mqtt username"
 #define mqtt_password "your mqtt password"
+#define mqtt_topic "vspace/one/state/open"

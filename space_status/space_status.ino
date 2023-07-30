@@ -48,6 +48,7 @@ void connectMQTT() {
     // Attempt to connect
     if (mqttClient.connect("vspace.one.state.open", mqtt_user, mqtt_password)) {
       Serial.println("connected");
+      mqttClient.subscribe(mqtt_topic);
     } else {
       Serial.print("failed, rc=");
       Serial.print(mqttClient.state());
@@ -63,7 +64,7 @@ void connectMQTT() {
 // Interrupt handling
 // ##############################
 
-uint64_t time_to_update = 0;
+uint64_t time_to_update = 0;  //set to pow(2,64)-1 to prevent setting state on boot
 
 void interruptStateSR() {
   uint64_t time_to_update = millis() + 100;  //only after there have been no interrupts for 100ms will the state update
@@ -74,7 +75,7 @@ void update_status() {
 
   stateOpen = digitalRead(interruptStatePin) == LOW;
   state.setLocalSpaceState(stateOpen ? SpaceState::SOPEN : SpaceState::SCLOSED);
-  state.setRemoteSpaceState(stateOpen ? SpaceState::SOPEN : SpaceState::SCLOSED);  //TODO query real remote state
+  state.setRemoteSpaceState(stateOpen ? SpaceState::SOPEN : SpaceState::SCLOSED);
 
   if (last != stateOpen) {
     StaticJsonDocument<128> doc;
@@ -87,11 +88,23 @@ void update_status() {
     char message[len];
     serializeJson(doc, message, len);
 
-    mqttClient.publish("vspace/one/state/open", message);
+    mqttClient.publish(mqtt_topic, message);
     last = stateOpen;
   }
 
   time_to_update = 0xFFFFFFFFFFFFFFFF;  //just set it to the max value of an uint64_t so it won't run again
+}
+
+void mqttCallback(char* topic, byte* pl, uint16_t len) {
+  if (strcmp(topic, mqtt_topic) == 0) {
+    StaticJsonDocument<256> doc;
+    DeserializationError err = deserializeJson(doc, pl, len);
+    if (err == DeserializationError::Ok) {
+      //if (doc["open"].is<bool>()) {
+      state.setLocalSpaceState(doc["open"].as<bool>() ? SpaceState::SOPEN : SpaceState::SCLOSED);
+      //}
+    }
+  }
 }
 
 // ##############################
