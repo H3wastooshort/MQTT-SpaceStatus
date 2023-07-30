@@ -1,10 +1,9 @@
-#include <FS.h>
 #include <Arduino.h>
 #include <ArduinoJson.h>
 #include <ESP8266WiFi.h>
 #include <PubSubClient.h>
 
-#include "config.template.h"
+#include "config.h"
 #include "neopixel.h"
 #include "state.h"
 
@@ -78,16 +77,15 @@ void update_status() {
   state.setRemoteSpaceState(stateOpen ? SpaceState::SOPEN : SpaceState::SCLOSED);  //TODO query real remote state
 
   if (last != stateOpen) {
-    StaticJsonBuffer<200> jsonBuffer;
+    StaticJsonDocument<128> doc;
 
-    JsonObject& root = jsonBuffer.createObject();
-    root["status"] = "ok";
+    doc["status"] = "ok";
 
-    JsonObject& data = root.createNestedObject("data");
-    data["open"] = stateOpen ? true : false;
+    doc["open"] = stateOpen ? true : false;
 
-    char message[200];
-    root.printTo((char*)message, root.measureLength() + 1);
+    uint16_t len = measureJson(doc) + 1;
+    char message[len];
+    serializeJson(doc, message, len);
 
     mqttClient.publish("vspace/one/state/open", message);
     last = stateOpen;

@@ -14,7 +14,7 @@ private:
         UNCONNECTED, OPEN, CLOSED, ERROR
     };
 
-    NeoPixelBus<NeoGrbFeature,NeoEsp8266Uart800KbpsMethod> strip;
+    NeoPixelBus<NeoGrbFeature,NeoEsp8266Uart0800KbpsMethod> strip;
     NeoPixelAnimator animator;
     State *state;
 
