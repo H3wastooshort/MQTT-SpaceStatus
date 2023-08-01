@@ -78,13 +78,14 @@ void update_status() {
 
   doc["status"] = "ok";
 
-  doc["open"] = stateOpen ? true : false;
+  doc["data"]["open"] = stateOpen ? true : false;
 
   uint16_t len = measureJson(doc) + 1;
   char message[len];
   serializeJson(doc, message, len);
 
-  mqttClient.publish(mqtt_topic, message);
+  if (mqttClient.publish(mqtt_topic, message))
+    state.setRemoteSpaceState(stateOpen ? SpaceState::SOPEN : SpaceState::SCLOSED);
 
   time_to_update = 0xFFFFFFFFFFFFFFFF;  //just set it to the max value of an uint64_t so it won't run again
 }
@@ -99,7 +100,7 @@ void mqttCallback(char* topic, byte* pl, uint16_t len) {
     DeserializationError err = deserializeJson(doc, pl, len);
     if (err == DeserializationError::Ok) {
       //if (doc["open"].is<bool>()) {
-      state.setRemoteSpaceState(doc["open"].as<bool>() ? SpaceState::SOPEN : SpaceState::SCLOSED);
+      state.setRemoteSpaceState(doc["data"]["open"].as<bool>() ? SpaceState::SOPEN : SpaceState::SCLOSED);
       //}
     } else {
       Serial.print("Incoming JSON DeserializationError ");
