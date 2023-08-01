@@ -1,4 +1,3 @@
-#include <Arduino.h>
 #include <ArduinoJson.h>
 #include <ESP8266WiFi.h>
 #include <PubSubClient.h>
@@ -27,7 +26,7 @@ void connectWiFi() {
   Serial.print("Connecting");
   while (WiFi.status() != WL_CONNECTED) {
     delay(500);
-    ESP.wdtFeed();
+    //ESP.wdtFeed();
     Serial.print(".");
     interface.loop();
   }
@@ -46,7 +45,7 @@ void connectMQTT() {
   while (!mqttClient.connected()) {
     Serial.print("Attempting MQTT connection...");
     // Attempt to connect
-    if (mqttClient.connect("vspace.one.state.open", mqtt_user, mqtt_password)) {
+    if (mqttClient.connect("vspace.one.state.open")) {
       Serial.println("connected");
       mqttClient.subscribe(mqtt_topic);
     } else {
@@ -66,7 +65,7 @@ void connectMQTT() {
 
 uint64_t time_to_update = 0;  //set to pow(2,64)-1 to prevent setting state on boot
 
-void interruptStateSR() {
+IRAM_ATTR void interruptStateSR() {
   uint64_t time_to_update = millis() + 100;  //only after there have been no interrupts for 100ms will the state update
 }
 
@@ -119,7 +118,7 @@ void setup() {
   state.setConnectionState(ConnectionState::PRE_SERIAL);
   Serial.begin(115200);
   while (!Serial) {
-    ESP.wdtFeed();
+    //ESP.wdtFeed();
     interface.loop();
   };
 
@@ -143,5 +142,5 @@ void loop() {
   }
 
   interface.loop();
-  ESP.wdtFeed();
+  //ESP.wdtFeed();
 }
