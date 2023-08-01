@@ -45,7 +45,7 @@ void connectMQTT() {
   while (!mqttClient.connected()) {
     Serial.print("Attempting MQTT connection...");
     // Attempt to connect
-    if (mqttClient.connect("vspace.one.state.open")) {
+    if (mqttClient.connect("vspace.one.state.open", mqtt_user, mqtt_password)) {
       Serial.println("connected");
       mqttClient.subscribe(mqtt_topic);
     } else {
@@ -66,34 +66,34 @@ void connectMQTT() {
 uint64_t time_to_update = 0;  //set to pow(2,64)-1 to prevent setting state on boot
 
 IRAM_ATTR void interruptStateSR() {
-  uint64_t time_to_update = millis() + 100;  //only after there have been no interrupts for 100ms will the state update
+  time_to_update = millis() + 100;  //only after there have been no interrupts for 100ms will the state update
 }
 
 void update_status() {
-  static bool last = false;
 
   stateOpen = digitalRead(interruptStatePin) == LOW;
   state.setLocalSpaceState(stateOpen ? SpaceState::SOPEN : SpaceState::SCLOSED);
 
-  if (last != stateOpen) {
-    StaticJsonDocument<128> doc;
+  StaticJsonDocument<128> doc;
 
-    doc["status"] = "ok";
+  doc["status"] = "ok";
 
-    doc["open"] = stateOpen ? true : false;
+  doc["open"] = stateOpen ? true : false;
 
-    uint16_t len = measureJson(doc) + 1;
-    char message[len];
-    serializeJson(doc, message, len);
+  uint16_t len = measureJson(doc) + 1;
+  char message[len];
+  serializeJson(doc, message, len);
 
-    mqttClient.publish(mqtt_topic, message);
-    last = stateOpen;
-  }
+  mqttClient.publish(mqtt_topic, message);
 
   time_to_update = 0xFFFFFFFFFFFFFFFF;  //just set it to the max value of an uint64_t so it won't run again
 }
 
 void mqttCallback(char* topic, byte* pl, uint16_t len) {
+  Serial.print("Incoming data on ");
+  Serial.println(topic);
+  Serial.write(pl, len);
+  Serial.println();
   if (strcmp(topic, mqtt_topic) == 0) {
     StaticJsonDocument<256> doc;
     DeserializationError err = deserializeJson(doc, pl, len);
@@ -101,6 +101,9 @@ void mqttCallback(char* topic, byte* pl, uint16_t len) {
       //if (doc["open"].is<bool>()) {
       state.setRemoteSpaceState(doc["open"].as<bool>() ? SpaceState::SOPEN : SpaceState::SCLOSED);
       //}
+    } else {
+      Serial.print("Incoming JSON DeserializationError ");
+      Serial.println(err.f_str());
     }
   }
 }
