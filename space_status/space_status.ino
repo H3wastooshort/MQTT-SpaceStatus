@@ -6,7 +6,7 @@
 #include "neopixel.h"
 #include "state.h"
 
-#define interruptStatePin 12
+#define interruptStatePin 14
 
 WiFiClient espClient;
 PubSubClient mqttClient(espClient);
@@ -74,7 +74,6 @@ void update_status() {
 
   stateOpen = digitalRead(interruptStatePin) == LOW;
   state.setLocalSpaceState(stateOpen ? SpaceState::SOPEN : SpaceState::SCLOSED);
-  state.setRemoteSpaceState(stateOpen ? SpaceState::SOPEN : SpaceState::SCLOSED);
 
   if (last != stateOpen) {
     StaticJsonDocument<128> doc;
@@ -100,7 +99,7 @@ void mqttCallback(char* topic, byte* pl, uint16_t len) {
     DeserializationError err = deserializeJson(doc, pl, len);
     if (err == DeserializationError::Ok) {
       //if (doc["open"].is<bool>()) {
-      state.setLocalSpaceState(doc["open"].as<bool>() ? SpaceState::SOPEN : SpaceState::SCLOSED);
+      state.setRemoteSpaceState(doc["open"].as<bool>() ? SpaceState::SOPEN : SpaceState::SCLOSED);
       //}
     }
   }
