@@ -85,7 +85,8 @@ void update_status() {
   serializeJson(doc, message, len);
 
   if (mqttClient.publish(mqtt_topic, message))
-    state.setRemoteSpaceState(stateOpen ? SpaceState::SOPEN : SpaceState::SCLOSED);
+    Serial.println("PUB OK");
+    //state.setRemoteSpaceState(stateOpen ? SpaceState::SOPEN : SpaceState::SCLOSED);
 
   time_to_update = 0xFFFFFFFFFFFFFFFF;  //just set it to the max value of an uint64_t so it won't run again
 }
@@ -128,6 +129,7 @@ void setup() {
   state.setConnectionState(ConnectionState::PRE_WIFI);
   connectWiFi();
 
+  mqttClient.setCallback(mqttCallback);
   mqttClient.setServer(mqtt_server, 1883);
 }
 
